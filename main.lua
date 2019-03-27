@@ -8,6 +8,7 @@ function love.load()
     
     -- Sounds
     eat_sound = love.audio.newSource("sounds/eat_sound.wav", "static")
+    crunch_sound = love.audio.newSource("sounds/crunch_sound.wav", "static")
 
     -- love.window.maximize()
     -- success = love.window.setFullscreen( true )
@@ -34,8 +35,6 @@ function love.load()
     last_action_time = time
     action_count = 0
     action_rate = 10
-
-
 end
 
 
@@ -131,6 +130,7 @@ function secureSnakePosition()
             if snake_size < 4 then
                 snake_size = 4
             end
+            crunch_sound:play()
             break
         end
     end
