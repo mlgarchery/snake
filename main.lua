@@ -20,24 +20,21 @@ function love.load()
     table_food = generateFood()
 
     -- initial position of the player square
-    table_x = {40, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-    table_y = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+    snake = {{x=40, y=0}, {x=20, y=0}, {x=0, y=0}, {x=0, y=0}}
     y = 0
     x = 0
-    -- number of frame already displayed
-    update_count = 0
 
-    lastscancodedown = 'w'
-    snake_size = 10
+    lastscancodedown = 's'
+    snake_size = 4
 end
 
 
 -- Rafraîchissement de l'écran (on re-draw)
 function love.draw()
         
-    love.graphics.draw(head_square, table_x[1], table_y[1])
+    love.graphics.draw(head_square, snake[1].x, snake[1].y)
     for i=2, snake_size do
-        love.graphics.draw(blanc_square, table_x[i], table_y[i])
+        love.graphics.draw(blanc_square, snake[i].x, snake[i].y)
     end
 
     -- dessin des lignes
@@ -50,20 +47,21 @@ function love.draw()
         love.graphics.line(0, j*atomic_move, width, j*atomic_move)    
     end
 
-    love.graphics.draw(blanc_square, table_food[1], table_food[2])
+    love.graphics.draw(blanc_square, table_food.x, table_food.y)
 end
 
 -- On update nos variables en fonction de touches tapées
 function love.update(dt)
         if lastscancodedown == 'w' then
-            y = y - atomic_move
-        elseif lastscancodedown == 's' then
-            y = y + atomic_move
-        elseif lastscancodedown == 'a' then
-            x = x - atomic_move
-        else
-            x = x + atomic_move
-        end
+        y = y - atomic_move
+    elseif lastscancodedown == 's' then
+        y = y + atomic_move
+    elseif lastscancodedown == 'a' then
+        x = x - atomic_move
+    else
+        x = x + atomic_move
+    end
+    if not love.keyboard.isScancodeDown(lastscancodedown) then
         if love.keyboard.isScancodeDown('w') and lastscancodedown ~='s' then
             lastscancodedown = 'w'
         elseif love.keyboard.isScancodeDown('s') and lastscancodedown ~='w' then
@@ -73,7 +71,8 @@ function love.update(dt)
         elseif love.keyboard.isScancodeDown('d') and lastscancodedown ~='a' then
             lastscancodedown = 'd'
         end
-    love.timer.sleep(1/15)
+    end
+    love.timer.sleep(1/snake_size)
 
     if y<0 then
         y = height - atomic_move
@@ -88,28 +87,18 @@ function love.update(dt)
         x=0
     end
 
-    if x ~= table_x[1] or y ~= table_y[1] then
-        for i=snake_size-1, 1, -1 do
-            table_x[i+1] = table_x[i] 
-            table_y[i+1] = table_y[i]
-        end
-        table_x[1] = x
-        table_y[1] = y
-    end
-
-    if atomicSquareEqual(x, y, table_food[1], table_food[2]) then
+    if atomicSquareEqual({x=x, y=y}, table_food) then
         snake_size = snake_size+2
-        table_x[snake_size-1] = table_x[snake_size-2]
-        table_y[snake_size-1] = table_y[snake_size-2]
-        table_x[snake_size] = table_x[snake_size-2]
-        table_y[snake_size] = table_y[snake_size-2]
-        table_food = generateFood()
-
+        snake[snake_size-1] = snake[snake_size-2]
+        snake[snake_size] = snake[snake_size-2]
+        
         eat_sound:play()
         love.graphics.draw(red_head_big, x, y)
+
+        table_food = generateFood()
     end
     for i=2, snake_size do
-        if atomicSquareEqual(table_x[1], table_y[1], table_x[i], table_y[i]) then
+        if atomicSquareEqual(snake[1], snake[i]) then
             snake_size = i-1
             if snake_size < 4 then
                 snake_size = 4
@@ -117,14 +106,20 @@ function love.update(dt)
             break
         end
     end
+    if x ~= snake[1].x or y ~= snake[1].y then
+        for i=snake_size-1, 1, -1 do
+            snake[i+1] = snake[i] 
+        end
+        snake[1] = {x=x, y=y}
+    end
 end
 
 function atomicNumber(a)
     return math.floor(a/atomic_move)
 end
 
-function atomicSquareEqual(x1, y1, x2, y2)
-    if atomicNumber(x1) == atomicNumber(x2) and atomicNumber(y1) == atomicNumber(y2) then
+function atomicSquareEqual(t1, t2)
+    if atomicNumber(t1.x) == atomicNumber(t2.x) and atomicNumber(t1.y) == atomicNumber(t2.y) then
         return true
     end
     return false
@@ -133,5 +128,5 @@ end
 function generateFood(food_a, food_b)
     food_a = love.math.random(0, math.floor(width/atomic_move)-1) * atomic_move
     food_b = love.math.random(0, math.floor(height/atomic_move)-1) * atomic_move
-    return {food_a, food_b}
+    return {x=food_a, y=food_b}
 end
