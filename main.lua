@@ -73,7 +73,7 @@ function love.update(dt)
         elseif love.keyboard.isScancodeDown('d') and lastscancodedown ~='a' then
             lastscancodedown = 'd'
         end
-    -- love.timer.sleep(1/20)
+    love.timer.sleep(1/15)
 
     if y<0 then
         y = height - atomic_move
