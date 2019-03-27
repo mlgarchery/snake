@@ -15,7 +15,7 @@ function love.load()
     -- without the panel bar
 
     -- number of possible tail-eat 
-    snake_lives = 170
+    snake_lives = 3
 
     height = love.graphics.getHeight()
     width = love.graphics.getWidth()
@@ -23,24 +23,23 @@ function love.load()
 
     table_food = generateFood()
 
-    frame_count = 0
-
-    -- initial position of the player square
-    snake = {{x=40, y=0}, {x=20, y=0}, {x=0, y=0}, {x=0, y=0}}
-    y = 0
-    x = 0
-
     last_scancode_down = 's'
+
+    -- | GameOptions | --
+    game_options = {speed_mode=1}
+
+    -- | Snake Var | --
+    -- initial snake position
+    snake = {{x=200, y=200}, {x=200, y=180}, {x=200, y=160}, {x=140, y=200}}
     snake_size = 4
     -- maximum size reached during the game
     max_snake_size = snake_size
+    snake_direction = {x=0, y=1}
+    snake_rate = 10
     
+    -- timer
     time = love.timer.getTime()
     last_action_time = time
-    action_count = 0
-    action_rate = 10
-
-
     isGameEnded = false
 end
 
@@ -68,8 +67,11 @@ function love.draw()
         love.graphics.line(0, j*atomic_move, width, j*atomic_move)    
     end
 
+    -- print lives
     love.graphics.print(snake_lives, width*0.9, height*0.1)
-
+    -- print max_snake_size
+    love.graphics.print(max_snake_size, width*0.9, height*0.15)
+    
     love.graphics.draw(blanc_square, table_food.x, table_food.y)
 end
 
@@ -80,18 +82,23 @@ function love.update(dt)
         return
     end
     direction = captureDirection()
-    moveSnake(direction)
+    moveSnake(captureDirection())
     secureSnakePosition()
 
 end
 
 function moveSnake(direction)
     time = love.timer.getTime()
-    if (action_rate*(time - last_action_time) > 1) then
-        x = x + direction[1] * atomic_move
-        y = y + direction[2] * atomic_move
-        action_count = action_count + 1
+    if (direction.x+2*direction.y == -snake_direction.x-2*snake_direction.y) then
+        direction = snake_direction
+    end
+    if (snake_rate*(time - last_action_time) > 1) then
+        for i=snake_size-1, 1, -1 do
+            snake[i+1] = snake[i] 
+        end
+        snake[1] = {x=snake[1].x + direction.x * atomic_move, y=snake[1].y + direction.y * atomic_move}
         last_action_time = time
+        snake_direction = direction
     end
 end
 
@@ -108,31 +115,31 @@ function captureDirection()
         end
     end
     if last_scancode_down == 'w' then
-        return {0,-1}
+        return {x=0, y=-1}
     elseif last_scancode_down == 's' then
-        return {0, 1}
+        return {x=0, y=1}
     elseif last_scancode_down == 'a' then
-        return {-1, 0}
+        return {x=-1, y=0}
     else
-        return {1, 0}
+        return {x=1, y=0}
     end
 end
 
 function secureSnakePosition()
-    if y<0 then
-        y = height - atomic_move
+    if snake[1].y<0 then
+        snake[1].y = height - atomic_move
     end
-    if y>=height then
-        y = 0
+    if snake[1].y>=height then
+        snake[1].y = 0
     end
-    if x<0 then
-        x = width - atomic_move
+    if snake[1].x<0 then
+        snake[1].x = width - atomic_move
     end
-    if x>=width then
-        x=0
+    if snake[1].x>=width then
+        snake[1].x=0
     end
 
-    if atomicSquareEqual({x=x, y=y}, table_food) then
+    if atomicSquareEqual(snake[1], table_food) then
         snake_size = snake_size+2
         -- Update maximum snake size
         if snake_size > max_snake_size then
@@ -140,10 +147,8 @@ function secureSnakePosition()
         end
         snake[snake_size-1] = snake[snake_size-2]
         snake[snake_size] = snake[snake_size-2]
-        
         eat_sound:play()
-        love.graphics.draw(red_head_big, x, y)
-
+        love.graphics.draw(red_head_big, snake[1].x, snake[1].y)
         table_food = generateFood()
     end
     for i=2, snake_size do
@@ -159,14 +164,16 @@ function secureSnakePosition()
             end
         end
     end
-    if x ~= snake[1].x or y ~= snake[1].y then
-        for i=snake_size-1, 1, -1 do
-            snake[i+1] = snake[i] 
-        end
-        snake[1] = {x=x, y=y}
-    end
+    snake_rate = calculateSnakeRate()
 end
 
+function calculateSnakeRate()
+    -- should be a method of snake class
+    if game_options.speed_mode == 1 then
+        return snake_size/2 + 6
+    end
+    return 10
+end
 
 function atomicNumber(a)
     return math.floor(a/atomic_move)
