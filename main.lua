@@ -1,16 +1,21 @@
 
 -- On load les ressources nécéssaires (images)
 function love.load()
+    -- Pictures
     blanc_square = love.graphics.newImage("pictures/blanc_square.png")
+    red_head_big = love.graphics.newImage("pictures/blanc_square.png")
     head_square = love.graphics.newImage("pictures/red_head.png")
     
+    -- Sounds
+    eat_sound = love.audio.newSource("sounds/eat_sound.wav", "static")
+
     -- love.window.maximize()
     -- success = love.window.setFullscreen( true )
     -- without the panel bar
 
     height = love.graphics.getHeight()
     width = love.graphics.getWidth()
-    atomic_move = 20 -- == size of blanc_square
+    atomic_move = 20 -- == snake_size of blanc_square
 
     table_food = generateFood()
 
@@ -21,23 +26,17 @@ function love.load()
     x = 0
     -- number of frame already displayed
     update_count = 0
+
     lastscancodedown = 'w'
-    size = 10
+    snake_size = 10
 end
+
 
 -- Rafraîchissement de l'écran (on re-draw)
 function love.draw()
-    if x ~= table_x[1] or y ~= table_y[1] then
-        for i=size-1, 1, -1 do
-            table_x[i+1] = table_x[i] 
-            table_y[i+1] = table_y[i]
-        end
-        table_x[1] = x
-        table_y[1] = y
-    end
         
     love.graphics.draw(head_square, table_x[1], table_y[1])
-    for i=2, size do
+    for i=2, snake_size do
         love.graphics.draw(blanc_square, table_x[i], table_y[i])
     end
 
@@ -74,7 +73,7 @@ function love.update(dt)
         elseif love.keyboard.isScancodeDown('d') and lastscancodedown ~='a' then
             lastscancodedown = 'd'
         end
-    love.timer.sleep(1/20)
+    -- love.timer.sleep(1/20)
 
     if y<0 then
         y = height - atomic_move
@@ -88,19 +87,32 @@ function love.update(dt)
     if x>=width then
         x=0
     end
-    if atomicSquareEqual(x, y, table_food[1], table_food[2]) then
-        size = size+2
-        table_x[size-1] = table_x[size-2]
-        table_y[size-1] = table_y[size-2]
-        table_x[size] = table_x[size-2]
-        table_y[size] = table_y[size-2]
-        table_food = generateFood()
+
+    if x ~= table_x[1] or y ~= table_y[1] then
+        for i=snake_size-1, 1, -1 do
+            table_x[i+1] = table_x[i] 
+            table_y[i+1] = table_y[i]
+        end
+        table_x[1] = x
+        table_y[1] = y
     end
-    for i=2, size do
+
+    if atomicSquareEqual(x, y, table_food[1], table_food[2]) then
+        snake_size = snake_size+2
+        table_x[snake_size-1] = table_x[snake_size-2]
+        table_y[snake_size-1] = table_y[snake_size-2]
+        table_x[snake_size] = table_x[snake_size-2]
+        table_y[snake_size] = table_y[snake_size-2]
+        table_food = generateFood()
+
+        eat_sound:play()
+        love.graphics.draw(red_head_big, x, y)
+    end
+    for i=2, snake_size do
         if atomicSquareEqual(table_x[1], table_y[1], table_x[i], table_y[i]) then
-            size = i-1
-            if size < 4 then
-                size = 4
+            snake_size = i-1
+            if snake_size < 4 then
+                snake_size = 4
             end
             break
         end
