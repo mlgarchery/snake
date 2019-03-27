@@ -19,19 +19,29 @@ function love.load()
 
     table_food = generateFood()
 
+    frame_count = 0
+
     -- initial position of the player square
     snake = {{x=40, y=0}, {x=20, y=0}, {x=0, y=0}, {x=0, y=0}}
     y = 0
     x = 0
 
-    lastscancodedown = 's'
+    last_scancode_down = 's'
     snake_size = 4
+
+    
+    time = love.timer.getTime()
+    last_action_time = time
+    action_count = 0
+    action_rate = 10
+
+
 end
 
 
 -- Rafraîchissement de l'écran (on re-draw)
 function love.draw()
-        
+    
     love.graphics.draw(head_square, snake[1].x, snake[1].y)
     for i=2, snake_size do
         love.graphics.draw(blanc_square, snake[i].x, snake[i].y)
@@ -52,28 +62,46 @@ end
 
 -- On update nos variables en fonction de touches tapées
 function love.update(dt)
-        if lastscancodedown == 'w' then
-        y = y - atomic_move
-    elseif lastscancodedown == 's' then
-        y = y + atomic_move
-    elseif lastscancodedown == 'a' then
-        x = x - atomic_move
-    else
-        x = x + atomic_move
+        
+    direction = captureDirection()
+    moveSnake(direction)
+    secureSnakePosition()
+end
+
+function moveSnake(direction)
+    time = love.timer.getTime()
+    if (action_rate*(time - last_action_time) > 1) then
+        x = x + direction[1] * atomic_move
+        y = y + direction[2] * atomic_move
+        action_count = action_count + 1
+        last_action_time = time
     end
-    if not love.keyboard.isScancodeDown(lastscancodedown) then
-        if love.keyboard.isScancodeDown('w') and lastscancodedown ~='s' then
-            lastscancodedown = 'w'
-        elseif love.keyboard.isScancodeDown('s') and lastscancodedown ~='w' then
-            lastscancodedown = 's'
-        elseif love.keyboard.isScancodeDown('a') and lastscancodedown ~='d' then
-            lastscancodedown = 'a'
-        elseif love.keyboard.isScancodeDown('d') and lastscancodedown ~='a' then
-            lastscancodedown = 'd'
+end
+
+function captureDirection()
+    if not love.keyboard.isScancodeDown(last_scancode_down) then
+        if love.keyboard.isScancodeDown('w') and last_scancode_down ~='s' then
+            last_scancode_down = 'w'
+        elseif love.keyboard.isScancodeDown('s') and last_scancode_down ~='w' then
+            last_scancode_down = 's'
+        elseif love.keyboard.isScancodeDown('a') and last_scancode_down ~='d' then
+            last_scancode_down = 'a'
+        elseif love.keyboard.isScancodeDown('d') and last_scancode_down ~='a' then
+            last_scancode_down = 'd'
         end
     end
-    love.timer.sleep(1/snake_size)
+    if last_scancode_down == 'w' then
+        return {0,-1}
+    elseif last_scancode_down == 's' then
+        return {0, 1}
+    elseif last_scancode_down == 'a' then
+        return {-1, 0}
+    else
+        return {1, 0}
+    end
+end
 
+function secureSnakePosition()
     if y<0 then
         y = height - atomic_move
     end
@@ -113,6 +141,7 @@ function love.update(dt)
         snake[1] = {x=x, y=y}
     end
 end
+
 
 function atomicNumber(a)
     return math.floor(a/atomic_move)
