@@ -14,6 +14,9 @@ function love.load()
     -- success = love.window.setFullscreen( true )
     -- without the panel bar
 
+    -- number of possible tail-eat 
+    snake_lives = 170
+
     height = love.graphics.getHeight()
     width = love.graphics.getWidth()
     atomic_move = 20 -- == snake_size of blanc_square
@@ -29,17 +32,26 @@ function love.load()
 
     last_scancode_down = 's'
     snake_size = 4
-
+    -- maximum size reached during the game
+    max_snake_size = snake_size
     
     time = love.timer.getTime()
     last_action_time = time
     action_count = 0
     action_rate = 10
+
+
+    isGameEnded = false
 end
 
 
 -- Rafraîchissement de l'écran (on re-draw)
 function love.draw()
+
+    if isGameEnded then
+        love.graphics.print("You lost ! Maximum size: " .. max_snake_size, width/2, height/2)
+        return
+    end
     
     love.graphics.draw(head_square, snake[1].x, snake[1].y)
     for i=2, snake_size do
@@ -56,15 +68,21 @@ function love.draw()
         love.graphics.line(0, j*atomic_move, width, j*atomic_move)    
     end
 
+    love.graphics.print(snake_lives, width*0.9, height*0.1)
+
     love.graphics.draw(blanc_square, table_food.x, table_food.y)
 end
 
 -- On update nos variables en fonction de touches tapées
 function love.update(dt)
-        
+    
+    if isGameEnded then 
+        return
+    end
     direction = captureDirection()
     moveSnake(direction)
     secureSnakePosition()
+
 end
 
 function moveSnake(direction)
@@ -116,6 +134,10 @@ function secureSnakePosition()
 
     if atomicSquareEqual({x=x, y=y}, table_food) then
         snake_size = snake_size+2
+        -- Update maximum snake size
+        if snake_size > max_snake_size then
+            max_snake_size = snake_size
+        end
         snake[snake_size-1] = snake[snake_size-2]
         snake[snake_size] = snake[snake_size-2]
         
@@ -127,11 +149,14 @@ function secureSnakePosition()
     for i=2, snake_size do
         if atomicSquareEqual(snake[1], snake[i]) then
             snake_size = i-1
+            crunch_sound:play()
+            snake_lives = snake_lives - 1
+            if snake_lives <=0 then
+                isGameEnded = true
+            end
             if snake_size < 4 then
                 snake_size = 4
             end
-            crunch_sound:play()
-            break
         end
     end
     if x ~= snake[1].x or y ~= snake[1].y then
