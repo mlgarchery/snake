@@ -1,5 +1,5 @@
 
--- On load les ressources nécéssaires (images)
+-- Load of necessary resources (pictures, sounds) and variables
 function love.load()
     -- Pictures
     blanc_square = love.graphics.newImage("pictures/blanc_square.png")
@@ -14,13 +14,16 @@ function love.load()
     -- success = love.window.setFullscreen( true )
     -- without the panel bar
 
-    -- number of possible tail-eat 
+    -- lives: number of possible tail-eats
     snake_lives = 3
-
+    -- screen resolution
     height = love.graphics.getHeight()
     width = love.graphics.getWidth()
-    atomic_move = 20 -- == snake_size of blanc_square
+    
+    -- also equal to snake_size of blanc_square
+    atomic_move = 20 
 
+    -- initial food position
     table_food = generateFood()
 
     last_scancode_down = 's'
@@ -40,11 +43,12 @@ function love.load()
     -- timer
     time = love.timer.getTime()
     last_action_time = time
+    
     isGameEnded = false
 end
 
 
--- Rafraîchissement de l'écran (on re-draw)
+-- Screen refresh ~60 time/s (re-draw)
 function love.draw()
 
     if isGameEnded then
@@ -57,25 +61,34 @@ function love.draw()
         love.graphics.draw(blanc_square, snake[i].x, snake[i].y)
     end
 
-    -- dessin des lignes
+    -- we draw the lines # TODO: change the color to grey
     for i=0, math.floor(width/atomic_move) do
         love.graphics.line(i*atomic_move,0, i*atomic_move, height)
     end
         
-    -- dessin des colonnes
+    -- we draw the columns 
     for j=0, math.floor(height/atomic_move) do
         love.graphics.line(0, j*atomic_move, width, j*atomic_move)    
     end
 
     -- print lives
-    love.graphics.print(snake_lives, width*0.9, height*0.1)
+    love.graphics.print(
+        "Lives: " .. snake_lives, 
+        math.floor(math.floor(width/atomic_move)*0.9)*atomic_move,
+        math.floor(math.floor(height/atomic_move)*0.1)*atomic_move
+    )
+
     -- print max_snake_size
-    love.graphics.print(max_snake_size, width*0.9, height*0.15)
-    
+    love.graphics.print(
+        "Max size: " .. max_snake_size, 
+        math.floor(math.floor(width/atomic_move)*0.9)*atomic_move,
+        math.floor(math.floor(height/atomic_move)*0.15)*atomic_move
+    )
+
     love.graphics.draw(blanc_square, table_food.x, table_food.y)
 end
 
--- On update nos variables en fonction de touches tapées
+-- Update of the variables (state) ~60 time/s
 function love.update(dt)
     
     if isGameEnded then 
@@ -159,6 +172,7 @@ function secureSnakePosition()
             if snake_lives <=0 then
                 isGameEnded = true
             end
+            -- minimum size of the snake
             if snake_size < 4 then
                 snake_size = 4
             end
