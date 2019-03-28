@@ -73,16 +73,25 @@ function love.draw()
 
     -- print lives
     love.graphics.print(
-        "Lives: " .. snake_lives, 
-        math.floor(math.floor(width/atomic_move)*0.9)*atomic_move,
-        math.floor(math.floor(height/atomic_move)*0.1)*atomic_move
+        -- first parameter { color, string }
+        -- color : { red, green, blue, alpha } values between 0 and 1 (not 0 and 255)
+        { {1, 0, 0,1}, "Lives: " .. snake_lives},
+        -- "Lives: " .. snake_lives, 
+        math.floor(math.floor(width/atomic_move)*0.8)*atomic_move,
+        math.floor(math.floor(height/atomic_move)*0.1)*atomic_move,
+        0, -- rotation (rad)
+        1.5, -- scale  (x)
+        1.5 -- scale (y)
     )
 
     -- print max_snake_size
     love.graphics.print(
         "Max size: " .. max_snake_size, 
-        math.floor(math.floor(width/atomic_move)*0.9)*atomic_move,
-        math.floor(math.floor(height/atomic_move)*0.15)*atomic_move
+        math.floor(math.floor(width/atomic_move)*0.8)*atomic_move,
+        math.floor(math.floor(height/atomic_move)*0.15)*atomic_move,
+        0,
+        1.5,
+        1.5
     )
 
     love.graphics.draw(blanc_square, table_food.x, table_food.y)
@@ -167,6 +176,7 @@ function secureSnakePosition()
     for i=2, snake_size do
         if atomicSquareEqual(snake[1], snake[i]) then
             snake_size = i-1
+            love.audio.stop()
             crunch_sound:play()
             snake_lives = snake_lives - 1
             if snake_lives <=0 then
