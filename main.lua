@@ -14,8 +14,8 @@ function love.load()
     -- success = love.window.setFullscreen( true )
     -- without the panel bar
 
-    -- lives: number of possible tail-eats
-    snake_lives = 3
+    
+    
     -- screen resolution
     height = love.graphics.getHeight()
     width = love.graphics.getWidth()
@@ -29,7 +29,8 @@ function love.load()
     last_scancode_down = 's'
 
     -- | GameOptions | --
-    game_options = {speed_mode=1}
+    -- snake_lives: number of possible tail-eats
+    game = {options = {speed_mode=1, snake_lives = 3}, pause = false, menu=true}
 
     -- | Snake Var | --
     -- initial snake position
@@ -50,7 +51,14 @@ end
 
 -- Screen refresh ~60 time/s (re-draw)
 function love.draw()
-
+    if game.menu then
+        if (game.options.speed_mode == 1) then
+            love.graphics.print("\n> Speed mode: accelerate (space to change)")
+        else
+            love.graphics.print("\n> Speed mode: constant (space to change)")
+        end
+        return
+    end
     if isGameEnded then
         love.graphics.print("You lost ! Maximum size: " .. max_snake_size, width/2, height/2)
         return
@@ -75,7 +83,7 @@ function love.draw()
     love.graphics.print(
         -- first parameter { color, string }
         -- color : { red, green, blue, alpha } values between 0 and 1 (not 0 and 255)
-        { {1, 0, 0,1}, "Lives: " .. snake_lives},
+        { {1, 0, 0,1}, "Lives: " .. game.options.snake_lives},
         -- "Lives: " .. snake_lives, 
         math.floor(math.floor(width/atomic_move)*0.8)*atomic_move,
         math.floor(math.floor(height/atomic_move)*0.1)*atomic_move,
@@ -100,13 +108,12 @@ end
 -- Update of the variables (state) ~60 time/s
 function love.update(dt)
     
-    if isGameEnded then 
+    if isGameEnded or game.pause then 
         return
     end
     direction = captureDirection()
     moveSnake(captureDirection())
     secureSnakePosition()
-
 end
 
 function moveSnake(direction)
@@ -178,8 +185,8 @@ function secureSnakePosition()
             snake_size = i-1
             love.audio.stop()
             crunch_sound:play()
-            snake_lives = snake_lives - 1
-            if snake_lives <=0 then
+            game.options.snake_lives = game.options.snake_lives - 1
+            if game.options.snake_lives <=0 then
                 isGameEnded = true
             end
             -- minimum size of the snake
@@ -193,7 +200,7 @@ end
 
 function calculateSnakeRate()
     -- should be a method of snake class
-    if game_options.speed_mode == 1 then
+    if game.options.speed_mode == 1 then
         return snake_size/2 + 6
     end
     return 10
@@ -214,4 +221,26 @@ function generateFood(food_a, food_b)
     food_a = love.math.random(0, math.floor(width/atomic_move)-1) * atomic_move
     food_b = love.math.random(0, math.floor(height/atomic_move)-1) * atomic_move
     return {x=food_a, y=food_b}
+end
+
+function love.keypressed(key, scancode, isrepeat)
+    if scancode == "p" or scancode == "pause"then
+        game.pause = not game.pause
+    end
+    if (scancode == "r" or scancode == "return") and isGameEnded then
+        love.load()
+        return
+    end
+    if scancode == "space" and game.menu then
+        game.options.speed_mode = -(game.options.speed_mode - 1 )
+        if game.options.speed_mode == 1 then
+            game.options.snake_lives = 3
+        else
+            game.options.snake_lives = 1
+        end
+    end
+    if scancode == "return" and game.menu then
+        game.menu = false
+        game.pause = false
+    end
 end
