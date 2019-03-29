@@ -161,6 +161,7 @@ function secureSnakePosition()
         snake[1].x=0
     end
 
+    --eating food
     if atomicSquareEqual(snake[1], table_food) then
         snake_size = snake_size+2
         -- Update maximum snake size
@@ -169,10 +170,12 @@ function secureSnakePosition()
         end
         snake[snake_size-1] = snake[snake_size-2]
         snake[snake_size] = snake[snake_size-2]
+        love.audio.stop()
         eat_sound:play()
         love.graphics.draw(red_head_big, snake[1].x, snake[1].y)
         table_food = generateFood()
     end
+    -- eating self
     for i=2, snake_size do
         if atomicSquareEqual(snake[1], snake[i]) then
             snake_size = i-1
