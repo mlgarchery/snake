@@ -1,6 +1,8 @@
 
 -- Load of necessary resources (pictures, sounds) and variables
 function love.load()
+
+    love.window.setTitle("Snake")
     -- Pictures
     blanc_square = love.graphics.newImage("pictures/blanc_square.png")
     red_head_big = love.graphics.newImage("pictures/blanc_square.png")
@@ -53,14 +55,14 @@ end
 function love.draw()
     if game.menu then
         if (game.options.speed_mode == 1) then
-            love.graphics.print("\n> Speed mode: accelerate (space to change)")
+            love.graphics.print("\n> Choose a speed mode: accelerate (space to change). Then, press Enter to play.")
         else
-            love.graphics.print("\n> Speed mode: constant (space to change)")
+            love.graphics.print("\n> Choose a speed mode: constant (space to change). Then, press Enter to play.")
         end
         return
     end
     if isGameEnded then
-        love.graphics.print("You lost ! Maximum size: " .. max_snake_size, width/2, height/2)
+        love.graphics.print("You lost ! Maximum size: " .. max_snake_size .. ". Press Enter to play.", width/2, height/2)
         return
     end
     
